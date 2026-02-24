@@ -1,22 +1,24 @@
-enum QuestionType { multipleChoice, scamOrNot }
+enum QuestionType { multipleChoice, scamOrNot, information }
 
 class Question {
   final String id;
   final String text;
   final List<String> options;
-  final int correctIndex;
+  final int? correctIndex;
   final String explanation;
   final QuestionType type;
   final String? assetPath; // For SMS/Email images or simulations
+  final String? title; // Optional title for info screens
 
   Question({
     required this.id,
     required this.text,
-    required this.options,
-    required this.correctIndex,
-    required this.explanation,
+    this.options = const [],
+    this.correctIndex,
+    this.explanation = '',
     this.type = QuestionType.multipleChoice,
     this.assetPath,
+    this.title,
   });
 }
 

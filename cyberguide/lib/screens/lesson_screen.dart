@@ -46,7 +46,13 @@ class _LessonScreenState extends State<LessonScreen> {
   void _speakQuestion() async {
     final settings = context.read<SettingsProvider>();
     if (settings.ttsEnabled) {
-      await _flutterTts.speak(widget.lesson.questions[_currentQuestionIndex].text);
+      final question = widget.lesson.questions[_currentQuestionIndex];
+      String textToSpeak = '';
+      if (question.title != null) {
+        textToSpeak += '${question.title}. ';
+      }
+      textToSpeak += question.text;
+      await _flutterTts.speak(textToSpeak);
     }
   }
 
@@ -59,12 +65,14 @@ class _LessonScreenState extends State<LessonScreen> {
 
   void _checkAnswer(int index) {
     if (_isAnswered) return;
+    final question = widget.lesson.questions[_currentQuestionIndex];
+    if (question.type == QuestionType.information) return;
 
     setState(() {
       _selectedOption = index;
       _attempts++;
 
-      if (index == widget.lesson.questions[_currentQuestionIndex].correctIndex) {
+      if (index == question.correctIndex) {
         _isCorrect = true;
         _isAnswered = true;
         _mascotState = MascotState.happy;
@@ -77,7 +85,6 @@ class _LessonScreenState extends State<LessonScreen> {
           _speakExplanation();
         } else {
           _mascotState = MascotState.thinking;
-          // Trigger a shake or something to indicate wrong but try again
         }
       }
     });
@@ -91,11 +98,12 @@ class _LessonScreenState extends State<LessonScreen> {
         _selectedOption = null;
         _isAnswered = false;
         _isCorrect = false;
-        _mascotState = MascotState.thinking;
+        _mascotState = widget.lesson.questions[_currentQuestionIndex].type == QuestionType.information
+            ? MascotState.happy
+            : MascotState.thinking;
       });
       _speakQuestion();
     } else {
-      // Lesson finished
       context.read<GameProvider>().completeLesson(widget.lesson.id, widget.lesson.xpReward);
       _showFinishDialog();
     }
@@ -147,8 +155,8 @@ class _LessonScreenState extends State<LessonScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
                 ),
                 onPressed: () {
-                  Navigator.of(context).pop(); // Dialog
-                  Navigator.of(context).pop(); // LessonScreen
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
                 },
                 child: const Text('WRÓĆ DO MAPY'),
               ).animate().fadeIn(delay: 1.seconds),
@@ -195,9 +203,11 @@ class _LessonScreenState extends State<LessonScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      _isAnswered
-                          ? (_isCorrect ? 'Świetnie!' : 'Nie martw się, uczymy się dalej.')
-                          : (_attempts == 1 ? 'Spróbuj jeszcze raz!' : 'Jak myślisz?'),
+                      question.type == QuestionType.information
+                          ? 'Dobra rada:'
+                          : (_isAnswered
+                              ? (_isCorrect ? 'Świetnie!' : 'Nie martw się, uczymy się dalej.')
+                              : (_attempts == 1 ? 'Spróbuj jeszcze raz!' : 'Jak myślisz?')),
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
@@ -219,42 +229,66 @@ class _LessonScreenState extends State<LessonScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (question.title != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text(
+                            question.title!,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ).animate().fadeIn(delay: 100.ms),
                       Text(
                         question.text,
                         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       ).animate().fadeIn(delay: 200.ms),
                       const SizedBox(height: 24),
-                      ...List.generate(question.options.length, (index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: _buildOptionButton(index, question),
-                        ).animate().fadeIn(delay: (400 + index * 100).ms).slideY(begin: 0.1, end: 0);
-                      }),
+                      if (question.type != QuestionType.information)
+                        ...List.generate(question.options.length, (index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: _buildOptionButton(index, question),
+                          ).animate().fadeIn(delay: (400 + index * 100).ms).slideY(begin: 0.1, end: 0);
+                        })
+                      else
+                        const Expanded(
+                          child: Center(
+                            child: Icon(Icons.lightbulb_outline, size: 100, color: Colors.amber),
+                          ),
+                        ).animate().fadeIn(delay: 400.ms).scale(),
                     ],
                   ),
                 ),
               ),
             ),
-            if (_isAnswered)
+            if (_isAnswered || question.type == QuestionType.information)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _isCorrect ? Colors.green[100] : Colors.red[100],
+                  color: question.type == QuestionType.information
+                      ? Colors.blue[100]
+                      : (_isCorrect ? Colors.green[100] : Colors.red[100]),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      question.explanation,
-                      style: const TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
+                    if (question.explanation.isNotEmpty)
+                      Text(
+                        question.explanation,
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    if (question.explanation.isNotEmpty) const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isCorrect ? Colors.green : Colors.red,
+                          backgroundColor: question.type == QuestionType.information
+                              ? AppTheme.darkBlue
+                              : (_isCorrect ? Colors.green : Colors.red),
                         ),
                         onPressed: _nextQuestion,
                         child: const Text('Dalej'),
