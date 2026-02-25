@@ -141,4 +141,86 @@ final List<Lesson> lessonsData = [
       ),
     ],
   ),
+  Lesson(
+    id: 'l7',
+    category: 'Oszustwa Telefoniczne',
+    title: 'Metoda "Na Wnuczka"',
+    questions: [
+      Question(
+        id: 'l7_q1',
+        title: 'Telefon od nieznajomego',
+        text: 'Oszuści dzwonią i udają kogoś bliskiego w tarapatach. Często wywierają presję czasu i proszą o zachowanie tajemnicy.',
+        type: QuestionType.information,
+      ),
+      Question(
+        id: 'l7_q2',
+        text: 'Cześć babciu, to ja! Miałem wypadek i pilnie potrzebuję 5000 zł na kaucję. Nie mów nic mamie, proszę!',
+        options: ['Ojej, już biegnę do banku!', 'Rozłączam się i dzwonię do wnuczka na jego numer', 'Pytam, w którym jest szpitalu'],
+        correctIndex: 1,
+        explanation: 'To klasyczna metoda "na wnuczka". Zawsze weryfikuj takie prośby, dzwoniąc bezpośrednio do rodziny.',
+        type: QuestionType.simulation,
+      ),
+      Question(
+        id: 'l7_q3',
+        text: 'Dzwoni osoba podająca się za policjanta i prosi o przekazanie pieniędzy w celu "zabezpieczenia ich przed hakerami". Czy policja tak robi?',
+        correctIndex: 1, // NIE
+        explanation: 'Policja nigdy nie prosi obywateli o przekazywanie pieniędzy ani nie uczestniczy w "akcjach" wymagających Twoich oszczędności.',
+        type: QuestionType.trueFalse,
+      ),
+    ],
+  ),
+  Lesson(
+    id: 'l8',
+    category: 'Zakupy w Internecie',
+    title: 'Bezpieczny e-sklep',
+    questions: [
+      Question(
+        id: 'l8_q1',
+        title: 'Okazje cenowe',
+        text: 'Jeśli produkt, który wszędzie kosztuje 1000 zł, w nowym sklepie jest za 200 zł - bądź czujny! To może być pułapka.',
+        type: QuestionType.information,
+      ),
+      Question(
+        id: 'l8_q2',
+        text: 'Czy każdy sklep internetowy, który ma ładną stronę, jest bezpieczny?',
+        correctIndex: 1, // NIE
+        explanation: 'Oszuści potrafią tworzyć bardzo profesjonalnie wyglądające sklepy. Zawsze sprawdzaj opinie i dane firmy.',
+        type: QuestionType.trueFalse,
+      ),
+      Question(
+        id: 'l8_q3',
+        text: 'Co jest sygnałem ostrzegawczym w e-sklepie?',
+        options: ['Brak regulaminu i adresu firmy', 'Płatność kartą lub przy odbiorze', 'Szybka dostawa'],
+        correctIndex: 0,
+        explanation: 'Legalny sklep musi mieć regulamin, dane kontaktowe i NIP firmy.',
+      ),
+    ],
+  ),
+  Lesson(
+    id: 'l9',
+    category: 'Ochrona Prywatności',
+    title: 'Media Społecznościowe',
+    questions: [
+      Question(
+        id: 'l9_q1',
+        title: 'Uważaj co udostępniasz',
+        text: 'Zdjęcie biletu na wakacje lub nowego dowodu osobistego może zostać wykorzystane przez złodziei tożsamości.',
+        type: QuestionType.information,
+      ),
+      Question(
+        id: 'l9_q2',
+        text: 'Czy warto publikować zdjęcia, na których widać Twój adres lub dokumenty?',
+        correctIndex: 1, // NIE
+        explanation: 'Takie dane są bezcenne dla oszustów. Chroń swoją prywatność i nie pokazuj dokumentów w sieci.',
+        type: QuestionType.trueFalse,
+      ),
+      Question(
+        id: 'l9_q3',
+        text: 'Kto powinien widzieć Twoje posty na Facebooku?',
+        options: ['Wszyscy użytkownicy internetu', 'Tylko Twoi znajomi', 'Nikt'],
+        correctIndex: 1,
+        explanation: 'Ustawienia prywatności "Tylko znajomi" znacznie ograniczają dostęp obcych osób do Twojego życia.',
+      ),
+    ],
+  ),
 ];

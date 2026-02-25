@@ -241,12 +241,18 @@ class _LessonScreenState extends State<LessonScreen> {
                             ),
                           ),
                         ).animate().fadeIn(delay: 100.ms),
-                      Text(
-                        question.text,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      ).animate().fadeIn(delay: 200.ms),
-                      const SizedBox(height: 24),
-                      if (question.type != QuestionType.information)
+                      if (question.type != QuestionType.trueFalse && question.type != QuestionType.simulation) ...[
+                        Text(
+                          question.text,
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        ).animate().fadeIn(delay: 200.ms),
+                        const SizedBox(height: 24),
+                      ],
+                      if (question.type == QuestionType.simulation)
+                        _buildSimulationUI(question)
+                      else if (question.type == QuestionType.trueFalse)
+                        _buildTrueFalseUI(question)
+                      else if (question.type != QuestionType.information)
                         ...List.generate(question.options.length, (index) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
@@ -300,6 +306,82 @@ class _LessonScreenState extends State<LessonScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSimulationUI(Question question) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.person)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  question.text,
+                  style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
+          ),
+        ).animate().slideX(begin: -0.2, end: 0).fadeIn(),
+        const SizedBox(height: 24),
+        ...List.generate(question.options.length, (index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildOptionButton(index, question),
+          ).animate().fadeIn(delay: (400 + index * 100).ms);
+        }),
+      ],
+    );
+  }
+
+  Widget _buildTrueFalseUI(Question question) {
+    return Column(
+      children: [
+        Text(
+          question.text,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ).animate().fadeIn(),
+        const SizedBox(height: 40),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 100,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isAnswered && question.correctIndex == 0 ? Colors.green : (_selectedOption == 0 && !_isCorrect ? Colors.red : null),
+                  ),
+                  onPressed: _isAnswered ? null : () => _checkAnswer(0),
+                  child: const Text('TAK', style: TextStyle(fontSize: 24)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SizedBox(
+                height: 100,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isAnswered && question.correctIndex == 1 ? Colors.green : (_selectedOption == 1 && !_isCorrect ? Colors.red : null),
+                  ),
+                  onPressed: _isAnswered ? null : () => _checkAnswer(1),
+                  child: const Text('NIE', style: TextStyle(fontSize: 24)),
+                ),
+              ),
+            ),
+          ],
+        ).animate().fadeIn(delay: 300.ms).scale(),
+      ],
     );
   }
 
