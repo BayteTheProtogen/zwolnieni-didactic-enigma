@@ -19,6 +19,10 @@ flutter pub get
 echo "Buduję plik APK (debug)..."
 flutter build apk --debug
 
+# Uwaga: Budowanie wersji release wymaga klucza podpisywania (signing key).
+# Aby zbudować wersję do sklepu, odkomentuj poniższą linię po skonfigurowaniu kluczy:
+# flutter build apk --release
+
 if [ $? -eq 0 ]; then
     echo "SUKCES: Plik APK został wygenerowany w: build/app/outputs/flutter-apk/app-debug.apk"
 else

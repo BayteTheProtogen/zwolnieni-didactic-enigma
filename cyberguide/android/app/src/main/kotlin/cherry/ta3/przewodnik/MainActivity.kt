@@ -1,4 +1,4 @@
-package com.cyberguide.senior.cyberguide
+package cherry.ta3.przewodnik
 
 import io.flutter.embedding.android.FlutterActivity
 

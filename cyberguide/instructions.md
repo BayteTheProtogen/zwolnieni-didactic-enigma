@@ -49,6 +49,6 @@ Gotowy plik APK znajdziesz w: `build/app/outputs/flutter-apk/app-release.apk`.
 
 ## Wskazówki dotyczące wdrażania (Store Ready)
 1. **Ikona aplikacji:** Ikony zostały wygenerowane i znajdują się w folderach platformowych.
-2. **Nazwa pakietu:** `com.cyberguide.senior`
+2. **Nazwa pakietu:** `cherry.ta3.przewodnik` (Android), `cherry.ta3.guide` (iOS)
 3. **Lokalizacja:** Aplikacja jest w pełni zlokalizowana na język polski.
 4. **Bezpieczeństwo:** Aplikacja nie wymaga backendu, wszystkie dane są przechowywane lokalnie na urządzeniu.
