@@ -13,6 +13,7 @@ fi
 
 # Pobranie zależności
 echo "Pobieram zależności..."
+flutter clean
 flutter pub get
 
 # 1. Budowanie Android (APK)
