@@ -20,7 +20,8 @@ class LessonScreen extends StatefulWidget {
 class _LessonScreenState extends State<LessonScreen> {
   int _currentQuestionIndex = 0;
   int _attempts = 0;
-  int? _selectedOption;
+  int _totalErrors = 0;
+  final Set<int> _triedOptions = {};
   bool _isAnswered = false;
   bool _isCorrect = false;
   MascotState _mascotState = MascotState.thinking;
@@ -64,12 +65,12 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 
   void _checkAnswer(int index) {
-    if (_isAnswered) return;
+    if (_isAnswered || _triedOptions.contains(index)) return;
     final question = widget.lesson.questions[_currentQuestionIndex];
     if (question.type == QuestionType.information) return;
 
     setState(() {
-      _selectedOption = index;
+      _triedOptions.add(index);
       _attempts++;
 
       if (index == question.correctIndex) {
@@ -78,6 +79,7 @@ class _LessonScreenState extends State<LessonScreen> {
         _mascotState = MascotState.happy;
         _speakExplanation();
       } else {
+        _totalErrors++;
         if (_attempts >= 2) {
           _isCorrect = false;
           _isAnswered = true;
@@ -95,7 +97,7 @@ class _LessonScreenState extends State<LessonScreen> {
       setState(() {
         _currentQuestionIndex++;
         _attempts = 0;
-        _selectedOption = null;
+        _triedOptions.clear();
         _isAnswered = false;
         _isCorrect = false;
         _mascotState = widget.lesson.questions[_currentQuestionIndex].type == QuestionType.information
@@ -104,12 +106,22 @@ class _LessonScreenState extends State<LessonScreen> {
       });
       _speakQuestion();
     } else {
-      context.read<GameProvider>().completeLesson(widget.lesson.id, widget.lesson.xpReward);
-      _showFinishDialog();
+      // Calculate reward based on performance
+      int reward = widget.lesson.xpReward;
+      if (_totalErrors == 0) {
+        // Perfect score
+      } else if (_totalErrors <= 2) {
+        reward = (reward * 0.7).toInt();
+      } else {
+        reward = (reward * 0.4).toInt();
+      }
+
+      context.read<GameProvider>().completeLesson(widget.lesson.id, reward);
+      _showFinishDialog(reward);
     }
   }
 
-  void _showFinishDialog() {
+  void _showFinishDialog(int actualReward) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -120,10 +132,10 @@ class _LessonScreenState extends State<LessonScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const MascotWidget(state: MascotState.excited, size: 150)
+              const MascotWidget(state: MascotState.excited, size: 150, color: Colors.white)
                   .animate()
                   .scale(duration: 600.ms, curve: Curves.elasticOut)
-                  .shimmer(delay: 1.seconds),
+                  .shimmer(delay: 1.seconds, color: Colors.blue.shade100),
               const SizedBox(height: 32),
               const Text(
                 'GRATULACJE!',
@@ -143,7 +155,7 @@ class _LessonScreenState extends State<LessonScreen> {
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Text(
-                  '+ ${widget.lesson.xpReward} XP',
+                  '+ $actualReward XP',
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ).animate().fadeIn(delay: 800.ms).scale(),
@@ -354,57 +366,83 @@ class _LessonScreenState extends State<LessonScreen> {
         const SizedBox(height: 40),
         Row(
           children: [
-            Expanded(
-              child: SizedBox(
-                height: 100,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isAnswered && question.correctIndex == 0 ? Colors.green : (_selectedOption == 0 && !_isCorrect ? Colors.red : null),
-                  ),
-                  onPressed: _isAnswered ? null : () => _checkAnswer(0),
-                  child: const Text('TAK', style: TextStyle(fontSize: 24)),
-                ),
-              ),
-            ),
+            _buildTrueFalseButton(0, 'TAK', question),
             const SizedBox(width: 16),
-            Expanded(
-              child: SizedBox(
-                height: 100,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isAnswered && question.correctIndex == 1 ? Colors.green : (_selectedOption == 1 && !_isCorrect ? Colors.red : null),
-                  ),
-                  onPressed: _isAnswered ? null : () => _checkAnswer(1),
-                  child: const Text('NIE', style: TextStyle(fontSize: 24)),
-                ),
-              ),
-            ),
+            _buildTrueFalseButton(1, 'NIE', question),
           ],
         ).animate().fadeIn(delay: 300.ms).scale(),
       ],
     );
   }
 
-  Widget _buildOptionButton(int index, Question question) {
-    bool isSelected = _selectedOption == index;
-    Color? color;
+  Widget _buildTrueFalseButton(int index, String label, Question question) {
+    final bool isTried = _triedOptions.contains(index);
+    final bool isCorrectAnswer = index == question.correctIndex;
+
+    Color? backgroundColor;
+    Color? foregroundColor;
+    BorderSide borderSide = BorderSide.none;
 
     if (_isAnswered) {
-      if (index == question.correctIndex) {
-        color = Colors.green;
-      } else if (isSelected && !_isCorrect) {
-        color = Colors.red;
+      if (isCorrectAnswer) {
+        backgroundColor = Colors.green;
+        foregroundColor = Colors.white;
+      } else if (isTried) {
+        backgroundColor = Colors.red;
+        foregroundColor = Colors.white;
       }
-    } else if (isSelected) {
-      color = Theme.of(context).primaryColor;
+    } else if (isTried) {
+      backgroundColor = Colors.red.withOpacity(0.8);
+      foregroundColor = Colors.white;
+      borderSide = const BorderSide(color: Colors.red, width: 2);
+    }
+
+    return Expanded(
+      child: SizedBox(
+        height: 100,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+            side: borderSide,
+          ),
+          onPressed: (_isAnswered || isTried) ? null : () => _checkAnswer(index),
+          child: Text(label, style: const TextStyle(fontSize: 24)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionButton(int index, Question question) {
+    final bool isTried = _triedOptions.contains(index);
+    final bool isCorrectAnswer = index == question.correctIndex;
+
+    Color? backgroundColor;
+    Color? foregroundColor;
+    BorderSide borderSide = BorderSide.none;
+
+    if (_isAnswered) {
+      if (isCorrectAnswer) {
+        backgroundColor = Colors.green;
+        foregroundColor = Colors.white;
+      } else if (isTried) {
+        backgroundColor = Colors.red;
+        foregroundColor = Colors.white;
+      }
+    } else if (isTried) {
+      // Incorrect attempt
+      backgroundColor = Colors.red.withOpacity(0.8);
+      foregroundColor = Colors.white;
+      borderSide = const BorderSide(color: Colors.red, width: 2);
     }
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: color != null ? Colors.white : null,
+        backgroundColor: backgroundColor,
+        foregroundColor: foregroundColor,
+        side: borderSide,
       ),
-      onPressed: _isAnswered ? null : () => _checkAnswer(index),
+      onPressed: (_isAnswered || isTried) ? null : () => _checkAnswer(index),
       child: Text(question.options[index]),
     );
   }
